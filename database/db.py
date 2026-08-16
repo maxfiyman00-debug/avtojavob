@@ -35,10 +35,7 @@ async def init_db():
         ))
         await conn.execute(text(
             "ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS total_auto_replies INTEGER NOT NULL DEFAULT 0"
-<<<<<<< HEAD
         ))
         await conn.execute(text(
             "ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS reply_every_time BOOLEAN NOT NULL DEFAULT FALSE"
-=======
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
         ))
