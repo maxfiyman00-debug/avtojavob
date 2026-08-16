@@ -23,7 +23,6 @@ def get_user_main_kb() -> InlineKeyboardMarkup:
         ]
     )
 
-<<<<<<< HEAD
 def get_management_menu_kb(auto_mark_read: bool, reply_every_time: bool = False) -> InlineKeyboardMarkup:
     read_toggle_text = "👁 Avto-o'qish: ✅ Yoqilgan" if auto_mark_read else "👁 Avto-o'qish: ❌ O'chirilgan"
     reply_mode_text = (
@@ -34,13 +33,6 @@ def get_management_menu_kb(auto_mark_read: bool, reply_every_time: bool = False)
         inline_keyboard=[
             [InlineKeyboardButton(text=read_toggle_text, callback_data="toggle_auto_read")],
             [InlineKeyboardButton(text=reply_mode_text, callback_data="toggle_reply_mode")],
-=======
-def get_management_menu_kb(auto_mark_read: bool) -> InlineKeyboardMarkup:
-    read_toggle_text = "👁 Avto-o'qish: ✅ Yoqilgan" if auto_mark_read else "👁 Avto-o'qish: ❌ O'chirilgan"
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=read_toggle_text, callback_data="toggle_auto_read")],
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
             [
                 InlineKeyboardButton(text="🗑 Oxirgi qabul qilinganni o'chirish", callback_data="delete_last_received"),
             ],
