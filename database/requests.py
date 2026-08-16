@@ -441,7 +441,6 @@ async def get_unique_customers_count(session: AsyncSession, owner_id: int) -> in
     return result.scalar_one() or 0
 
 
-<<<<<<< HEAD
 # --- Avtojavob rejimi: bir marta yoki har safar ---
 
 async def toggle_reply_every_time(session: AsyncSession, user_id: int) -> bool | None:
@@ -453,8 +452,6 @@ async def toggle_reply_every_time(session: AsyncSession, user_id: int) -> bool |
     return user.reply_every_time
 
 
-=======
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
 async def get_setting(session: AsyncSession, key: str) -> str | None:
     stmt = select(BotSetting).where(BotSetting.key == key)
     result = await session.execute(stmt)
