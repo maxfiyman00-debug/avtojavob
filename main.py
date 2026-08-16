@@ -7,6 +7,7 @@ from middlewares.db_middleware import DbSessionMiddleware
 from handlers import admin, user_setup, business, business_management
 from aiogram.types import InputStoryContentPhoto, InputStoryContentVideo
 from aiogram.exceptions import TelegramAPIError
+from services.media import download_as_input_file
 
 PREMIUM_CHECK_INTERVAL_HOURS = 1
 STORY_CHECK_INTERVAL_SECONDS = 60
@@ -33,10 +34,16 @@ async def scheduled_story_watcher():
                 due_stories = await get_due_scheduled_stories(session)
                 for story in due_stories:
                     try:
-                        content = (
-                            InputStoryContentPhoto(photo=story.media_file_id) if story.media_type == "photo"
-                            else InputStoryContentVideo(video=story.media_file_id)
-                        )
+                        # MUHIM: bu yerda ham file_id qayta ishlatib bo'lmaydi -
+                        # avval faylni yangidan yuklab, keyin (aiogram'ning
+                        # 'str'-only validatsiyasini xavfsiz chetlab o'tish
+                        # uchun) model_construct orqali biriktiramiz.
+                        if story.media_type == "photo":
+                            input_media = await download_as_input_file(bot, story.media_file_id, "story.jpg")
+                            content = InputStoryContentPhoto.model_construct(photo=input_media)
+                        else:
+                            input_media = await download_as_input_file(bot, story.media_file_id, "story.mp4")
+                            content = InputStoryContentVideo.model_construct(video=input_media)
                         await bot.post_story(
                             business_connection_id=story.connection_id,
                             content=content,
