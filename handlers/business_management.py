@@ -28,12 +28,9 @@ from database.requests import (
     create_scheduled_story, get_user_scheduled_stories, delete_scheduled_story,
     toggle_working_hours, set_working_hours, set_out_of_hours_text,
     add_keyword_reply, get_keyword_replies, delete_keyword_reply,
-<<<<<<< HEAD
     get_unique_customers_count, toggle_reply_every_time,
-=======
-    get_unique_customers_count,
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
 )
+from services.media import download_as_input_file
 from keyboards.user_kb import (
     get_user_main_kb, get_management_menu_kb, get_profile_menu_kb,
     get_back_to_management_kb, get_gifts_kb, get_story_timing_kb, get_scheduled_stories_kb,
@@ -72,11 +69,7 @@ async def management_menu(call: CallbackQuery, session: AsyncSession):
         "<b>🛠 Biznes boshqaruvi</b>\n\n"
         "Bu yerdan ulangan Business hisobingizni to'liq boshqarishingiz mumkin: "
         "xabarlar, profil, hikoyalar, sovg'a va yulduzlar.",
-<<<<<<< HEAD
         reply_markup=get_management_menu_kb(user.auto_mark_read, user.reply_every_time),
-=======
-        reply_markup=get_management_menu_kb(user.auto_mark_read),
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
     )
     await call.answer()
 
@@ -90,7 +83,6 @@ async def toggle_read(call: CallbackQuery, session: AsyncSession):
         return await call.answer("Xatolik yuz berdi.", show_alert=True)
 
     user = await get_user_by_id(session, call.from_user.id)
-<<<<<<< HEAD
     await call.message.edit_reply_markup(reply_markup=get_management_menu_kb(user.auto_mark_read, user.reply_every_time))
     await call.answer("✅ Yoqildi" if new_state else "❌ O'chirildi")
 
@@ -110,12 +102,6 @@ async def toggle_reply_mode(call: CallbackQuery, session: AsyncSession):
     )
 
 
-=======
-    await call.message.edit_reply_markup(reply_markup=get_management_menu_kb(user.auto_mark_read))
-    await call.answer("✅ Yoqildi" if new_state else "❌ O'chirildi")
-
-
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
 @router.callback_query(F.data == "delete_last_received")
 async def delete_last_received(call: CallbackQuery, session: AsyncSession, bot: Bot):
     user = await _require_connection(call, session)
@@ -285,9 +271,12 @@ async def edit_photo_process(message: Message, state: FSMContext, session: Async
 
     try:
         photo_file_id = message.photo[-1].file_id
+        # MUHIM: Telegram profil rasmlari uchun eski file_id'ni qabul qilmaydi -
+        # fayl albatta YANGIDAN yuklanishi kerak, shu sabab avval yuklab olamiz.
+        input_photo = await download_as_input_file(bot, photo_file_id, "profile.jpg")
         await bot.set_business_account_profile_photo(
             business_connection_id=user.connection_id,
-            photo=InputProfilePhotoStatic(photo=photo_file_id),
+            photo=InputProfilePhotoStatic(photo=input_photo),
         )
         await message.answer("✅ Profil rasmi yangilandi!", reply_markup=get_profile_menu_kb())
     except TelegramAPIError as e:
@@ -343,30 +332,31 @@ async def post_story_now(call: CallbackQuery, state: FSMContext, session: AsyncS
         return
 
     try:
-        content = (
-            InputStoryContentPhoto(photo=media_file_id) if media_type == "photo"
-            else InputStoryContentVideo(video=media_file_id)
-        )
+        # MUHIM: hikoya uchun ham file_id qayta ishlatib bo'lmaydi - fayl
+        # albatta yangidan yuklanishi shart. Bundan tashqari, aiogram'ning
+        # InputStoryContentPhoto/Video klasslari "photo"/"video" maydonini
+        # oddiy validatsiya orqali faqat 'str' deb qabul qiladi (hozirgi
+        # aiogram versiyasidagi cheklov), shu sabab validatsiyani chetlab
+        # o'tish uchun `model_construct` ishlatamiz - bu xavfsiz, chunki
+        # qiymatni o'zimiz to'g'ri turda (BufferedInputFile) beryapmiz.
+        if media_type == "photo":
+            input_media = await download_as_input_file(bot, media_file_id, "story.jpg")
+            content = InputStoryContentPhoto.model_construct(photo=input_media)
+        else:
+            input_media = await download_as_input_file(bot, media_file_id, "story.mp4")
+            content = InputStoryContentVideo.model_construct(video=input_media)
         await bot.post_story(
             business_connection_id=user.connection_id,
             content=content,
             active_period=86400,  # 24 soat (minimal ruxsat etilgan davr)
             caption=caption,
         )
-<<<<<<< HEAD
         await call.message.edit_text("✅ Hikoya muvaffaqiyatli joylandi!", reply_markup=get_management_menu_kb(user.auto_mark_read, user.reply_every_time))
-=======
-        await call.message.edit_text("✅ Hikoya muvaffaqiyatli joylandi!", reply_markup=get_management_menu_kb(user.auto_mark_read))
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
     except TelegramAPIError as e:
         logging.error(f"post_story error: {e}")
         await call.message.edit_text(
             f"❌ Xatolik: hikoyani joylab bo'lmadi. Buning uchun Telegram Premium talab qilinishi mumkin.\n<code>{e}</code>",
-<<<<<<< HEAD
             reply_markup=get_management_menu_kb(user.auto_mark_read, user.reply_every_time),
-=======
-            reply_markup=get_management_menu_kb(user.auto_mark_read),
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
         )
     await state.clear()
     await call.answer()
@@ -415,11 +405,7 @@ async def post_story_schedule_save(message: Message, state: FSMContext, session:
     await message.answer(
         f"✅ Hikoya <b>{scheduled_at.strftime('%Y-%m-%d %H:%M')} UTC</b> vaqtiga rejalashtirildi!\n"
         "Belgilangan vaqtda avtomatik joylanadi.",
-<<<<<<< HEAD
         reply_markup=get_management_menu_kb(user.auto_mark_read, user.reply_every_time),
-=======
-        reply_markup=get_management_menu_kb(user.auto_mark_read),
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
     )
 
 
