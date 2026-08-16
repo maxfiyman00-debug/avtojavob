@@ -37,12 +37,9 @@ class User(Base):
     # --- Statistika ---
     total_auto_replies: Mapped[int] = mapped_column(default=0)  # jami avtomatik yuborilgan javoblar soni
 
-<<<<<<< HEAD
     # --- Avtojavob rejimi ---
     reply_every_time: Mapped[bool] = mapped_column(Boolean, default=False)  # False = faqat birinchi murojaatga, True = har safar
 
-=======
->>>>>>> 996f2e5fc4d650bd0bd5cb316b85a3dad8b21cfa
     auto_replies: Mapped[list["AutoReply"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     social_links: Mapped[list["SocialLink"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     business_chats: Mapped[list["BusinessChat"]] = relationship(back_populates="user", cascade="all, delete-orphan")
